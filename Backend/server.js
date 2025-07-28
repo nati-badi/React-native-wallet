@@ -1,12 +1,14 @@
 import express from "express";
 import dotenv from "dotenv";
 import { sql } from "./config/db.js";
+import rateLimiter from "./middleware/rateLimiter.js";
 
 dotenv.config();
 
 const app = express();
 
 // Middleware
+app.use(rateLimiter);
 app.use(express.json());
 
 async function initDB() {
@@ -110,6 +112,38 @@ app.delete("/api/transactions/:id", async (req, res) => {
     });
   } catch (error) {
     console.log("Error deleting transaction", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get("/api/transactions/summary/:user_id", async (req, res) => {
+  try {
+    const { user_id } = req.params;
+
+    const balanceResult = await sql`
+      SELECT COALESCE(SUM(amount), 0) as balance FROM transactions WHERE user_id = ${user_id}
+    `;
+
+    const incomeResult = await sql`
+      SELECT COALESCE(SUM(amount), 0) as income FROM transactions WHERE user_id = ${user_id} AND category = 'income'
+    `;
+
+    const expenseResult = await sql`
+      SELECT COALESCE(SUM(amount), 0) as expense FROM transactions WHERE user_id = ${user_id} AND category = 'expense'
+    `;
+
+    const summary = {
+      balance: balanceResult[0].balance,
+      income: incomeResult[0].income,
+      expense: expenseResult[0].expense,
+    };
+
+    res.status(200).json({
+      message: "Transaction summary retrieved successfully",
+      summary,
+    });
+  } catch (error) {
+    console.log("Error retrieving transaction summary", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
