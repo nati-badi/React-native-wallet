@@ -91,22 +91,28 @@ export async function transactionSummary(req, res) {
   try {
     const { user_id } = req.params;
 
-    const balanceResult = await sql`
-      SELECT COALESCE(SUM(amount), 0) as balance FROM transactions WHERE user_id = ${user_id}
-    `;
+    // const balanceResult = await sql`
+    //   SELECT COALESCE(SUM(amount), 0) as balance FROM transactions WHERE user_id = ${user_id}
+    // `;
 
-    const incomeResult = await sql`
-      SELECT COALESCE(SUM(amount), 0) as income FROM transactions WHERE user_id = ${user_id} AND category = 'income'
-    `;
+    // const incomeResult = await sql`
+    //   SELECT COALESCE(SUM(amount), 0) as income FROM transactions WHERE user_id = ${user_id} AND category = 'income'
+    // `;
 
-    const expenseResult = await sql`
-      SELECT COALESCE(SUM(amount), 0) as expense FROM transactions WHERE user_id = ${user_id} AND category = 'expense'
-    `;
+    // const expenseResult = await sql`
+    //   SELECT COALESCE(SUM(amount), 0) as expense FROM transactions WHERE user_id = ${user_id} AND category = 'expense'
+    // `;
+
+    const Result = await sql`SELECT
+      SUM(amount) AS balance,
+      COALESCE(SUM(CASE WHEN category = 'income' THEN amount ELSE 0 END),0) AS income,
+      COALESCE(SUM(CASE WHEN category = 'expense' THEN amount ELSE 0 END),0) AS expenses
+      FROM transactions WHERE user_id = ${user_id}`;
 
     const summary = {
-      balance: balanceResult[0].balance,
-      income: incomeResult[0].income,
-      expense: expenseResult[0].expense,
+      balance: Result[0].balance,
+      income: Result[0].income,
+      expense: Result[0].expenses,
     };
 
     res.status(200).json({
