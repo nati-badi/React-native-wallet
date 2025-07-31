@@ -36,9 +36,18 @@ export default function SignUpScreen() {
       // and capture OTP code
       setPendingVerification(true);
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
+      const code = err?.errors?.[0]?.code;
+      const message = err?.errors?.[0]?.message;
+
+      if (code === "form_identifier_exists") {
+        setError("Email already exists. Please try again.");
+      } else if (code === "form_password_incorrect") {
+        setError("Incorrect password. Try again.");
+      } else if (message?.includes("Passwords must be 8 characters or more")) {
+        setError("Passwords must be 8 characters or more.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     }
   };
 
@@ -154,7 +163,7 @@ export default function SignUpScreen() {
           onChangeText={(password) => setPassword(password)}
         />
         <TouchableOpacity style={styles.button} onPress={onSignUpPress}>
-          <Text style={styles.buttonText}>SignUp</Text>
+          <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
 
         <View style={styles.footerContainer}>
