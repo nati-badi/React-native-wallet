@@ -5,24 +5,23 @@ import { Alert } from "react-native";
 
 const apiURL = "https://wallet-api-rrwn.onrender.com/api";
 
-export const useTransactions = ({ userId }) => {
+export const useTransactions = (userId) => {
   const [transactions, setTransactions] = useState([]);
   const [summary, setSummary] = useState({
     balance: 0,
     income: 0,
-    expense: 0,
+    expenses: 0,
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // useCallback is used for performance optimization reasons
-  // it memoizes the function and returns a new function only if the dependencies change
+  // useCallback is used for performance reasons, it will memoize the function
   const fetchTransactions = useCallback(async () => {
     try {
       const response = await fetch(`${apiURL}/transactions/${userId}`);
       const data = await response.json();
       setTransactions(data);
     } catch (error) {
-      console.log("Error fetching transactions: ", error);
+      console.error("Error fetching transactions:", error);
     }
   }, [userId]);
 
@@ -32,7 +31,7 @@ export const useTransactions = ({ userId }) => {
       const data = await response.json();
       setSummary(data);
     } catch (error) {
-      console.log("Error fetching summary: ", error);
+      console.error("Error fetching summary:", error);
     }
   }, [userId]);
 
@@ -41,9 +40,10 @@ export const useTransactions = ({ userId }) => {
 
     setIsLoading(true);
     try {
+      // can be run in parallel
       await Promise.all([fetchTransactions(), fetchSummary()]);
     } catch (error) {
-      console.log("Error loading data: ", error);
+      console.error("Error loading data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -54,17 +54,16 @@ export const useTransactions = ({ userId }) => {
       const response = await fetch(`${apiURL}/transactions/${id}`, {
         method: "DELETE",
       });
-      if (!response.ok) {
-        throw new Error("Failed to delete transaction");
-      }
+      if (!response.ok) throw new Error("Failed to delete transaction");
 
-      // Refresh data after deleting transaction
+      // Refresh data after deletion
       loadData();
-      Alert.alert("Transaction deleted successfully");
+      Alert.alert("Success", "Transaction deleted successfully");
     } catch (error) {
-      console.log("Error deleting transaction: ", error);
-      Alert.alert("Failed to delete transaction", error.message);
+      console.error("Error deleting transaction:", error);
+      Alert.alert("Error", error.message);
     }
   };
+
   return { transactions, summary, isLoading, loadData, deleteTransaction };
 };
