@@ -1,12 +1,21 @@
 import { useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+  FlatList,
+  Alert,
+} from "react-native";
 import { SignOutButton } from "@/components/SignOutButton";
 import { useTransactions } from "../../hooks/useTransactions.js";
 import { useEffect } from "react";
 import PageLoader from "../../components/PageLoader.jsx";
 import { styles } from "../../assets/styles/home.styles.js";
 import { Ionicons } from "@expo/vector-icons";
+import BalanceCard from "../../components/BalanceCard.jsx";
+import { TransactionItem } from "../../components/TransactionItem.jsx";
 
 export default function Page() {
   const { user } = useUser();
@@ -19,7 +28,24 @@ export default function Page() {
     loadData();
   }, [loadData]);
 
+  const handleDelete = async (id) => {
+    Alert.alert(
+      "Delete Transaction",
+      "Are you sure you want to delete this transaction?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => deleteTransaction(id),
+        },
+      ]
+    );
+  };
+
   if (isLoading) return <PageLoader />;
+
+  console.log(transactions);
 
   return (
     <View style={styles.container}>
@@ -53,7 +79,24 @@ export default function Page() {
             <SignOutButton />
           </View>
         </View>
+
+        <BalanceCard summary={summary} />
+
+        <View style={styles.transactionsHeaderContainer}>
+          <Text style={styles.sectionTitle}>Resent Transactions</Text>
+        </View>
       </View>
+
+      {/* TRANSACTIONS LIST */}
+
+      <FlatList
+        style={styles.transactionsList}
+        contentContainerStyle={styles.transactionsListContent}
+        data={transactions.transactions}
+        renderItem={({ item }) => (
+          <TransactionItem item={item} onDelete={handleDelete} />
+        )}
+      />
     </View>
   );
 }
