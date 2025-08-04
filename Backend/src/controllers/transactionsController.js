@@ -96,23 +96,23 @@ export async function transactionSummary(req, res) {
     // `;
 
     // const incomeResult = await sql`
-    //   SELECT COALESCE(SUM(amount), 0) as income FROM transactions WHERE user_id = ${user_id} AND category = 'income'
+    //   SELECT COALESCE(SUM(amount), 0) as income FROM transactions WHERE user_id = ${user_id} AND amount > 0
     // `;
 
     // const expenseResult = await sql`
-    //   SELECT COALESCE(SUM(amount), 0) as expense FROM transactions WHERE user_id = ${user_id} AND category = 'expense'
+    //   SELECT COALESCE(SUM(amount), 0) as expense FROM transactions WHERE user_id = ${user_id} AND amount < 0
     // `;
 
     const Result = await sql`SELECT
-      SUM(amount) AS balance,
-      COALESCE(SUM(CASE WHEN category = 'income' THEN amount ELSE 0 END),0) AS income,
-      COALESCE(SUM(CASE WHEN category = 'expense' THEN amount ELSE 0 END),0) AS expenses
+      COALESCE(SUM(amount),0) AS balance,
+      COALESCE(SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END),0) AS income,
+      COALESCE(SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END),0) AS expense
       FROM transactions WHERE user_id = ${user_id}`;
 
     const summary = {
       balance: Result[0].balance,
       income: Result[0].income,
-      expense: Result[0].expenses,
+      expense: Result[0].expense,
     };
 
     res.status(200).json({
