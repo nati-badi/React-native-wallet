@@ -2,8 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
-
-const apiURL = "https://wallet-api-rrwn.onrender.com/api";
+import { apiURL } from "../constants/api";
 
 export const useTransactions = (userId) => {
   const [transactions, setTransactions] = useState([]);
